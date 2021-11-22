@@ -3,8 +3,10 @@
 
 @using PESUEatsBlazorServer.JSONBodyFormats.app.customer
 @using PESUEatsBlazorServer.JSONBodyFormats.app.restaurant
+@using PESUEatsBlazorServer.JSONBodyFormats.app.shared
 @inject PESUEatsBlazorServer.Services.PESUEatsWebAPIService PESUEatsWebAPI
 @inject IDialogService DialogService
+@inject NavigationManager navMan
 
 <PageTitle>Order Food</PageTitle>
 <h3>Order Food</h3>
@@ -27,12 +29,13 @@
                 @*<MudTd DataLabel="Remail">@context.email</MudTd>*@
                 <MudTd DataLabel="RRating">@context.rating</MudTd>
                 <MudTd DataLabel="RSelection">
-                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(() => SelectRestaurant(@context.id))"
-                    EndIcon="@Icons.Material.Filled.SkipNext">Select Restaurant</MudButton>
+                    <MudIconButton Variant="Variant.Filled" Color="Color.Primary" 
+                    OnClick="@(() => SelectRestaurant(@context.id))" Icon="@Icons.Material.Filled.SkipNext" />
                 </MudTd>
             </RowTemplate>
         </MudTable>
     </MudTabPanel>
+
     <MudTabPanel Text="Select Items" ToolTip="Select the items you want to order">
         <MudText Typo="Typo.h4">@(selectedRestaurant != null ?
             $"Restaurant: {selectedRestaurant.name}" : "First select a restaurant")</MudText>
@@ -43,6 +46,10 @@
                 <MudTh>Category</MudTh>
                 <MudTh>Description</MudTh>
                 <MudTh>Price</MudTh>
+                <MudTh>
+                    Quantity:
+                    <MudNumericField @bind-Value="Quantity" Label="Filled" Variant="Variant.Text" Min="0" Max="10" />
+                </MudTh>
             </HeaderContent>
             <RowTemplate>
                 <MudTd DataLabel="RName">@context.Name</MudTd>
@@ -50,36 +57,61 @@
                 <MudTd DataLabel="RDescription">@context.Description</MudTd>
                 <MudTd DataLabel="RPrice">@context.Price</MudTd>
                 <MudTd DataLabel="RAddToCart">
-                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(() => AddToCart(@context.Id))"
-                    EndIcon="@Icons.Material.Filled.PlusOne">Cart </MudButton>
+                    <MudIconButton Variant="Variant.Filled" Color="Color.Primary" 
+                    OnClick="@(() => AddToCart(@context.Id))" Icon="@Icons.Material.Filled.PlusOne" />
                 </MudTd>
             </RowTemplate>
         </MudTable>
-    </MudTabPanel>
-    <MudTabPanel Text="Place Order" ToolTip="Finish placing your order">
         
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="FinalizeCart"
+            EndIcon="@Icons.Material.Filled.SkipNext">Finalize Cart</MudButton>
+    </MudTabPanel>
+
+    <MudTabPanel Text="View Cart & Place Order" ToolTip="View your Cart and place your order">
+        <MudTable Items="@cartItems" Hover="true" Breakpoint="Breakpoint.Sm" LoadingProgressColor="Color.Info">
+            <HeaderContent>
+                <MudTh>Name</MudTh>
+                <MudTh>Category</MudTh>
+                <MudTh>Description</MudTh>
+                <MudTh>Price</MudTh>
+                <MudTh>Delete</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="IName">@context.Name</MudTd>
+                <MudTd DataLabel="IPrice">@context.Price</MudTd>
+                <MudTd DataLabel="MIQuantity">@context.Quantity</MudTd>
+                <MudTd DataLabel="Delete">
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(() => RemoveFromCart(@context.id))"
+                    EndIcon="@Icons.Material.Filled.PlusOne">Cart</MudButton>
+                </MudTd>
+            </RowTemplate>
+        </MudTable>
+
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="PlaceOrder"
+            EndIcon="@Icons.Material.Filled.SkipNext">Place Order</MudButton>
     </MudTabPanel>
 </MudTabs>
 
 
-
-
 @code {
     MudTabs tabs;
+    public int Quantity { get; set; } = 1;
 
     private IEnumerable<RestaurantsJSONResponse200> restaurants = new List<RestaurantsJSONResponse200>();
     private IEnumerable<MenuItemsJSONResponse200>? menuItems = new List<MenuItemsJSONResponse200>();
+    private IEnumerable<ShowCartJSONResponse200> cartItems = new List<ShowCartJSONResponse200>();
 
     private RestaurantsJSONResponse200? selectedRestaurant;
 
     [CascadingParameter]
     private string UserAuthToken { get; set; } = "";
 
-    private async void AddToCart(int Iid)
+
+    private async void RemoveFromCart(int Iid)
     {
-        //selectedRestaurant = restaurants.Where(r => r.id == Rid).FirstOrDefault();
-        (bool, AddToCartJSONResponse200?, string?) result =
-            await PESUEatsWebAPI.AddToCart(UserAuthToken, new AddToCartJSONRequest(Iid));
+
+        (bool, GetCartIdJSONResponse200?, string?) result =
+            await PESUEatsWebAPI.GetActiveCartID(UserAuthToken);
         bool isSuccess = result.Item1;
         string? message = result.Item3;
 
@@ -94,10 +126,163 @@
         }
         else
         {
+            (bool, RemoveFromCartJSONResponse200?, string?) result2 =
+                await PESUEatsWebAPI.RemoveFromCart(UserAuthToken, new RemoveFromCartJSONRequest(Iid, result.Item2.Cartid));
+            bool isSuccess2 = result.Item1;
+            string? message2 = result.Item3;
+
+            if (!isSuccess2)
+            {
+                await DialogService.ShowMessageBox(
+                    "Warning",
+                    message2??"",
+                    yesText:"OK"
+                );
+                StateHasChanged();
+            }
+            else
+            {
+                await DialogService.ShowMessageBox(
+                    "Success",
+                    "Deleted from cart",
+                    yesText: "close"
+                );
+                StateHasChanged();
+            }
+        }
+    }
+
+
+    private async void AddToCart(int Iid)
+    {
+        (bool, GetCartIdJSONResponse200?, string?) result =
+            await PESUEatsWebAPI.GetActiveCartID(UserAuthToken);
+        bool isSuccess = result.Item1;
+        string? message = result.Item3;
+
+        if (!isSuccess)
+        {
             await DialogService.ShowMessageBox(
-                "Success",
-                "Added to cart",
-                yesText: "close"
+                "Warning",
+                message??"",
+                yesText:"OK"
+            );
+            StateHasChanged();
+        }
+        else
+        {
+            (bool, AddToCartJSONResponse200?, string?) result2 =
+                await PESUEatsWebAPI.AddToCart(UserAuthToken, new AddToCartJSONRequest(Iid, result.Item2.Cartid, Quantity));
+            bool isSuccess2 = result.Item1;
+            string? message2 = result.Item3;
+
+            if (!isSuccess2)
+            {
+                await DialogService.ShowMessageBox(
+                    "Warning",
+                    message2??"",
+                    yesText:"OK"
+                );
+                StateHasChanged();
+            }
+            else
+            {
+                await DialogService.ShowMessageBox(
+                    "Success",
+                    "Added to cart",
+                    yesText: "close"
+                );
+                StateHasChanged();
+            }
+        }
+    }
+
+    private async void PlaceOrder()
+    {
+        (bool, GetCartIdJSONResponse200?, string?) result =
+            await PESUEatsWebAPI.GetActiveCartID(UserAuthToken);
+        bool isSuccess = result.Item1;
+        string? message = result.Item3;
+
+        if (!isSuccess)
+        {
+            await DialogService.ShowMessageBox(
+                "Warning",
+                message??"",
+                yesText:"OK"
+            );
+            StateHasChanged();
+        }
+        else
+        {
+            (bool, PlaceOrderJSONResponse200?, string?) result2 =
+                await PESUEatsWebAPI.PlaceOrder(UserAuthToken, new PlaceOrderJSONRequest(result.Item2.Cartid));
+            bool isSuccess2 = result.Item1;
+            string? message2 = result.Item3;
+
+            if (!isSuccess2)
+            {
+                await DialogService.ShowMessageBox(
+                    "Warning",
+                    message2??"",
+                    yesText:"OK"
+                );
+                StateHasChanged();
+            }
+            else
+            {
+                await DialogService.ShowMessageBox(
+                    "Success",
+                    "Your order has been placed",
+                    yesText: "close"
+                );
+                StateHasChanged();
+                navMan.NavigateTo("/app/customer/myorder");
+            }
+        }
+    }
+
+    private async void FinalizeCart()
+    {
+        (bool, GetCartIdJSONResponse200?, string?) result =
+            await PESUEatsWebAPI.GetActiveCartID(UserAuthToken);
+        bool isSuccess = result.Item1;
+        string? message = result.Item3;
+
+        if (!isSuccess)
+        {
+            await DialogService.ShowMessageBox(
+                "Warning",
+                message??"",
+                yesText:"OK"
+            );
+            StateHasChanged();
+        }
+        else
+        {
+            await SetCartItemsList(result.Item2.Cartid);
+        }
+    }
+
+    private async Task SetCartItemsList(int cartId)
+    {
+        (bool, List<ShowCartJSONResponse200>?, string?) result = await PESUEatsWebAPI.ShowCart(UserAuthToken, cartId);
+
+        bool success = result.Item1;
+        List<ShowCartJSONResponse200> _menuItems = result.Item2 ?? new List<ShowCartJSONResponse200>();
+        string errorMessage = result.Item3 ?? "";
+
+        if (success)
+        {
+            cartItems = _menuItems;
+            StateHasChanged();
+        }
+        else
+        {
+            await DialogService.ShowMessageBox(
+                "Warning", 
+                errorMessage,
+                yesText:"close"
             );
             StateHasChanged();
         }
@@ -108,9 +293,28 @@
         selectedRestaurant = restaurants.Where(r => r.id == Rid).FirstOrDefault();
         if (selectedRestaurant != null)
         {
-            tabs.ActivatePanel(1);
             menuItems = null;
-            await SetItemsList(Rid);
+            (bool, CreateNewCartJSONResponse200?, string?) result = 
+                await PESUEatsWebAPI.CreateNewCart(UserAuthToken);
+
+            bool success = result.Item1;
+            string errorMessage = result.Item3 ?? "";
+
+            if (success)
+            {
+                await SetItemsList(Rid);
+                StateHasChanged();
+                tabs.ActivatePanel(1);
+            }
+            else
+            {
+                await DialogService.ShowMessageBox(
+                    "Warning", 
+                    errorMessage,
+                    yesText:"close"
+                );
+                StateHasChanged();
+            }
         }
         else
         {

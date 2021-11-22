@@ -1,0 +1,60 @@
+﻿@using PESUEatsBlazorServer.JSONBodyFormats.app.customer
+
+@inject PESUEatsBlazorServer.Services.PESUEatsWebAPIService PESUEatsWebAPI
+@inject IDialogService DialogService
+
+<MudText>Cart</MudText>
+
+<MudTable Items="@cartItems" Hover="true" Breakpoint="Breakpoint.Sm" LoadingProgressColor="Color.Info">
+    <HeaderContent>
+        <MudTh>Name</MudTh>
+        <MudTh>Category</MudTh>
+        <MudTh>Description</MudTh>
+        <MudTh>Price</MudTh>
+        <MudTh>Delete</MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd DataLabel="IName">@context.Name</MudTd>
+        <MudTd DataLabel="IPrice">@context.Price</MudTd>
+        <MudTd DataLabel="MIQuantity">@context.Quantity</MudTd>
+        <MudTd DataLabel="Delete">
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(() => RemoveFromCart(@context.id))"
+            EndIcon="@Icons.Material.Filled.PlusOne">Cart</MudButton>
+        </MudTd>
+    </RowTemplate>
+</MudTable>
+
+@code {
+    private IEnumerable<ShowCartJSONResponse200> cartItems = new List<ShowCartJSONResponse200>();
+
+    [CascadingParameter]
+    private string UserAuthToken { get; set; } = "";
+
+    private async void RemoveFromCart(int Iid)
+    {
+        //(bool, AddToCartJSONResponse200?, string?) result =
+        //    await PESUEatsWebAPI.RemoveFromCart(UserAuthToken, new RemoveFromCartJSONRequest(Iid, )));
+        //bool isSuccess = result.Item1;
+        //string? message = result.Item3;
+
+        //if (!isSuccess)
+        //{
+        //    await DialogService.ShowMessageBox(
+        //        "Warning",
+        //        message??"",
+        //        yesText:"OK"
+        //    );
+        //    StateHasChanged();
+        //}
+        //else
+        //{
+        //    await DialogService.ShowMessageBox(
+        //        "Deleted",
+        //        "Deleted from cart",
+        //        yesText: "close"
+        //    );
+        //    StateHasChanged();
+        //}
+    }
+
+}

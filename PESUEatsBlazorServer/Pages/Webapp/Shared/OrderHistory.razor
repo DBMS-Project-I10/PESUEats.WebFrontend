@@ -1,0 +1,33 @@
+﻿@page "/app/shared/orderhistory"
+@attribute [Authorize(Roles = "customer,restaurant,da")]
+
+@inject PESUEatsBlazorServer.Services.PESUEatsWebAPIService PESUEatsWebAPI
+@inject IDialogService DialogService
+
+<PageTitle>📃 Order History</PageTitle>
+<h3>📃 Order History</h3>
+
+<AuthorizeView Roles="customer">
+    <Authorized>
+        customer
+    </Authorized>
+</AuthorizeView>
+
+<AuthorizeView Roles="restaurant">
+    <Authorized>
+        restaurant
+    </Authorized>
+</AuthorizeView>
+
+<AuthorizeView Roles="da">
+    <Authorized>
+        da
+    </Authorized>
+</AuthorizeView>
+
+@code {
+    [CascadingParameter]
+    private string UserAuthToken { get; set; } = "";
+
+
+}

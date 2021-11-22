@@ -1,4 +1,5 @@
 ﻿using PESUEatsBlazorServer.JSONBodyFormats.app.customer;
+using PESUEatsBlazorServer.JSONBodyFormats.app.shared;
 using PESUEatsBlazorServer.JSONBodyFormats.general;
 using System.Text.Json;
 
@@ -6,20 +7,21 @@ namespace PESUEatsBlazorServer.Services
 {
     public partial class PESUEatsWebAPIService
     {
-        public async Task<(bool, List<ShowCartJSONResponse200>?, string?)>
-            ShowCart(string token, int cartId)
+
+        public async Task<(bool, GetCartIdJSONResponse200?, string?)>
+            GetActiveCartID (string token)
         {
             try
             {
                 HttpResponseMessage response;
                 client.DefaultRequestHeaders.Add("token", token);
-                response = await client.GetAsync($"showcart?cartid={cartId}");
+                response = await client.GetAsync("getcartid");
 
                 if ((int)response.StatusCode == 200)
                 {
                     using var responseContent = await response.Content.ReadAsStreamAsync();
-                    List<ShowCartJSONResponse200>? jsonResponse =
-                        await JsonSerializer.DeserializeAsync<List<ShowCartJSONResponse200>>(responseContent);
+                    GetCartIdJSONResponse200? jsonResponse =
+                        await JsonSerializer.DeserializeAsync<GetCartIdJSONResponse200>(responseContent);
                     if (jsonResponse != null)
                     {
                         return (true, jsonResponse, null);
@@ -49,21 +51,20 @@ namespace PESUEatsBlazorServer.Services
             }
         }
 
-
-        public async Task<(bool, AddToCartJSONResponse200?, string?)> 
-            AddToCart(string token, AddToCartJSONRequest addToCartJSONRequest)
+        public async Task<(bool, CreateNewCartJSONResponse200?, string?)>
+            CreateNewCart (string token)
         {
             try
             {
                 HttpResponseMessage response;
                 client.DefaultRequestHeaders.Add("token", token);
-                response = await client.PostAsJsonAsync("addtocart", addToCartJSONRequest);
+                response = await client.PostAsJsonAsync("createnewcart", "");
 
                 if ((int)response.StatusCode == 200)
                 {
                     using var responseContent = await response.Content.ReadAsStreamAsync();
-                    AddToCartJSONResponse200? jsonResponse =
-                        await JsonSerializer.DeserializeAsync<AddToCartJSONResponse200>(responseContent);
+                    CreateNewCartJSONResponse200? jsonResponse =
+                        await JsonSerializer.DeserializeAsync<CreateNewCartJSONResponse200>(responseContent);
                     if (jsonResponse != null)
                     {
                         return (true, jsonResponse, null);
@@ -93,20 +94,20 @@ namespace PESUEatsBlazorServer.Services
             }
         }
 
-        public async Task<(bool, RemoveFromCartJSONResponse200?, string?)> 
-            RemoveFromCart(string token, RemoveFromCartJSONRequest removeFromCartJSONRequest)
+        public async Task<(bool, PlaceOrderJSONResponse200?, string?)>
+            PlaceOrder(string token, PlaceOrderJSONRequest placeOrder)
         {
             try
             {
                 HttpResponseMessage response;
                 client.DefaultRequestHeaders.Add("token", token);
-                response = await client.PostAsJsonAsync("removefromcart", removeFromCartJSONRequest);
+                response = await client.GetAsync("getcartid");
 
                 if ((int)response.StatusCode == 200)
                 {
                     using var responseContent = await response.Content.ReadAsStreamAsync();
-                    RemoveFromCartJSONResponse200? jsonResponse =
-                        await JsonSerializer.DeserializeAsync<RemoveFromCartJSONResponse200>(responseContent);
+                    PlaceOrderJSONResponse200? jsonResponse =
+                        await JsonSerializer.DeserializeAsync<PlaceOrderJSONResponse200>(responseContent);
                     if (jsonResponse != null)
                     {
                         return (true, jsonResponse, null);

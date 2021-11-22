@@ -1,6 +1,7 @@
 ﻿@page "/app/customer/orderfood"
 @attribute [Authorize(Roles = "customer")]
 
+@using PESUEatsBlazorServer.JSONBodyFormats.app.customer
 @using PESUEatsBlazorServer.JSONBodyFormats.app.restaurant
 @inject PESUEatsBlazorServer.Services.PESUEatsWebAPIService PESUEatsWebAPI
 @inject IDialogService DialogService
@@ -8,32 +9,150 @@
 <PageTitle>Order Food</PageTitle>
 <h3>Order Food</h3>
 
+<MudTabs Elevation="4" Rounded="true" Centered="true" Color="@Color.Secondary" @ref="tabs">
+    <MudTabPanel Text="Select Restaurant" ToolTip="Select a restaurant">
+        <MudTable Items="@restaurants" Hover="true" Breakpoint="Breakpoint.Sm" LoadingProgressColor="Color.Info">
+            <HeaderContent>
+                <MudTh>Name</MudTh>
+                <MudTh>Cuisine</MudTh>
+                <MudTh>Location</MudTh>
+                @*<MudTh>email</MudTh>*@
+                <MudTh>Rating</MudTh>
+                <MudTh></MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="RName">@context.name</MudTd>
+                <MudTd DataLabel="RCuisine">@context.cuisine</MudTd>
+                <MudTd DataLabel="RLocation">@context.location</MudTd>
+                @*<MudTd DataLabel="Remail">@context.email</MudTd>*@
+                <MudTd DataLabel="RRating">@context.rating</MudTd>
+                <MudTd DataLabel="RSelection">
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(() => SelectRestaurant(@context.id))"
+                    EndIcon="@Icons.Material.Filled.SkipNext">Select Restaurant</MudButton>
+                </MudTd>
+            </RowTemplate>
+        </MudTable>
+    </MudTabPanel>
+    <MudTabPanel Text="Select Items" ToolTip="Select the items you want to order">
+        <MudText Typo="Typo.h4">@(selectedRestaurant != null ?
+            $"Restaurant: {selectedRestaurant.name}" : "First select a restaurant")</MudText>
 
-<MudTable Items="@restaurants" Hover="true" Breakpoint="Breakpoint.Sm" LoadingProgressColor="Color.Info">
-    <HeaderContent>
-        <MudTh>Name</MudTh>
-        <MudTh>Cuisine</MudTh>
-        <MudTh>Location</MudTh>
-        @*<MudTh>email</MudTh>*@
-        <MudTh>Rating</MudTh>
-    </HeaderContent>
-    <RowTemplate>
-        <MudTd DataLabel="RName">@context.name</MudTd>
-        <MudTd DataLabel="RCuisine">@context.cuisine</MudTd>
-        <MudTd DataLabel="RLocation">@context.location</MudTd>
-        @*<MudTd DataLabel="Remail">@context.email</MudTd>*@
-        <MudTd DataLabel="RRating">@context.rating</MudTd>
-    </RowTemplate>
-</MudTable>
+        <MudTable Items="@menuItems" Hover="true" Breakpoint="Breakpoint.Sm" LoadingProgressColor="Color.Info">
+            <HeaderContent>
+                <MudTh>Name</MudTh>
+                <MudTh>Category</MudTh>
+                <MudTh>Description</MudTh>
+                <MudTh>Price</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="RName">@context.Name</MudTd>
+                <MudTd DataLabel="RCategory">@context.Category</MudTd>
+                <MudTd DataLabel="RDescription">@context.Description</MudTd>
+                <MudTd DataLabel="RPrice">@context.Price</MudTd>
+                <MudTd DataLabel="RAddToCart">
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(() => AddToCart(@context.Id))"
+                    EndIcon="@Icons.Material.Filled.PlusOne">Cart </MudButton>
+                </MudTd>
+            </RowTemplate>
+        </MudTable>
+    </MudTabPanel>
+    <MudTabPanel Text="Place Order" ToolTip="Finish placing your order">
+        
+    </MudTabPanel>
+</MudTabs>
+
+
 
 
 @code {
+    MudTabs tabs;
+
     private IEnumerable<RestaurantsJSONResponse200> restaurants = new List<RestaurantsJSONResponse200>();
+    private IEnumerable<MenuItemsJSONResponse200>? menuItems = new List<MenuItemsJSONResponse200>();
+
+    private RestaurantsJSONResponse200? selectedRestaurant;
 
     [CascadingParameter]
     private string UserAuthToken { get; set; } = "";
 
+    private async void AddToCart(int Iid)
+    {
+        //selectedRestaurant = restaurants.Where(r => r.id == Rid).FirstOrDefault();
+        (bool, AddToCartJSONResponse200?, string?) result =
+            await PESUEatsWebAPI.AddToCart(UserAuthToken, new AddToCartJSONRequest(Iid));
+        bool isSuccess = result.Item1;
+        string? message = result.Item3;
+
+        if (!isSuccess)
+        {
+            await DialogService.ShowMessageBox(
+                "Warning",
+                message??"",
+                yesText:"OK"
+            );
+            StateHasChanged();
+        }
+        else
+        {
+            await DialogService.ShowMessageBox(
+                "Success",
+                "Added to cart",
+                yesText: "close"
+            );
+            StateHasChanged();
+        }
+    }
+
+    private async void SelectRestaurant(int Rid)
+    {
+        selectedRestaurant = restaurants.Where(r => r.id == Rid).FirstOrDefault();
+        if (selectedRestaurant != null)
+        {
+            tabs.ActivatePanel(1);
+            menuItems = null;
+            await SetItemsList(Rid);
+        }
+        else
+        {
+            await DialogService.ShowMessageBox(
+                "Warning", 
+                "selectedRestaurant is null. Why?",
+                yesText:"close"
+            );
+            StateHasChanged();
+        }
+    }
+    
+    private async Task SetItemsList(int Rid)
+    {
+        (bool, List<MenuItemsJSONResponse200>?, string?) result = await PESUEatsWebAPI.GetMenuItemsAsync(UserAuthToken, Rid);
+
+        bool success = result.Item1;
+        List<MenuItemsJSONResponse200> _menuItems = result.Item2 ?? new List<MenuItemsJSONResponse200>();
+        string errorMessage = result.Item3 ?? "";
+
+        if (success)
+        {
+            menuItems = _menuItems;
+            StateHasChanged();
+        }
+        else
+        {
+            await DialogService.ShowMessageBox(
+                "Warning", 
+                errorMessage,
+                yesText:"close"
+            );
+            StateHasChanged();
+        }
+    }
+
     protected override async void OnInitialized()
+    {
+        await SetRestaurantsList();
+    }
+
+    private async Task SetRestaurantsList()
     {
         (bool, List<RestaurantsJSONResponse200>?, string?) result = await PESUEatsWebAPI.GetRestaurantsAsync(UserAuthToken);
 

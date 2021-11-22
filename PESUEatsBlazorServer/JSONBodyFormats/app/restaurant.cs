@@ -38,4 +38,35 @@ namespace PESUEatsBlazorServer.JSONBodyFormats.app.restaurant
 			this.cuisine = cuisine;
 		}
 	}
+
+	public class MenuItemsJSONResponse200
+	{
+		[JsonPropertyName("iid")]
+		public int Id { get; set; }
+
+		[JsonPropertyName("iinmenurid")]
+		public int InMenuRid { get; set; }
+
+		[JsonPropertyName("iname")]
+		public string Name { get; set; }
+
+		[JsonPropertyName("iprice")]
+		public float Price { get; set; }
+
+		[JsonPropertyName("idescription")]
+		public string? Description { get; set; }
+
+		[JsonPropertyName("icategory")]
+		public string? Category { get; set; }
+
+		public MenuItemsJSONResponse200(int id, int inMenuRid, string name, float price, string? description, string? category)
+		{
+			this.Id = id;
+			this.InMenuRid = inMenuRid;
+			this.Name = name;
+			this.Price = price;
+			this.Description = description;
+			this.Category = category;
+		}
+	}
 }

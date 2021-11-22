@@ -43,23 +43,28 @@ namespace PESUEatsBlazorServer.Services
             {
                 return (false, null, new ErrorMessage("Fatal error").Message);
             }
+            finally
+            {
+                client.DefaultRequestHeaders.Clear();
+            }
         }
 
-        public async Task<(bool, List<RestaurantsJSONResponse200>?, string?)> GetMenuItemsAsync(string token, int rid)
+        public async Task<(bool, List<MenuItemsJSONResponse200>?, string?)> GetMenuItemsAsync(string token, int rid)
         {
             try
             {
                 HttpResponseMessage response;
+                client.DefaultRequestHeaders.Clear();
                 client.DefaultRequestHeaders.Add("token", token);
                 response = await client.GetAsync($"menuitems?rid={rid}");
 
                 if ((int)response.StatusCode == 200)
                 {
                     using var responseContent = await response.Content.ReadAsStreamAsync();
-                    List<RestaurantsJSONResponse200>? restaurants = await JsonSerializer.DeserializeAsync<List<RestaurantsJSONResponse200>>(responseContent);
-                    if (restaurants != null)
+                    List<MenuItemsJSONResponse200>? menuItems = await JsonSerializer.DeserializeAsync<List<MenuItemsJSONResponse200>>(responseContent);
+                    if (menuItems != null)
                     {
-                        return (true, restaurants, null);
+                        return (true, menuItems, null);
                     }
                     else
                     {
@@ -80,7 +85,10 @@ namespace PESUEatsBlazorServer.Services
             {
                 return (false, null, new ErrorMessage("Fatal error").Message);
             }
+            finally
+            {
+                client.DefaultRequestHeaders.Clear();
+            }
         }
-
     }
 }

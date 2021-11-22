@@ -1,0 +1,15 @@
+﻿@page "/app/da/currentdelivery"
+@attribute [Authorize(Roles = "da")]
+
+@inject PESUEatsBlazorServer.Services.PESUEatsWebAPIService PESUEatsWebAPI
+@inject IDialogService DialogService
+
+<PageTitle>🚚 Current Delivery</PageTitle>
+<h3>🚚 Current Delivery</h3>
+
+@code {
+    [CascadingParameter]
+    private string UserAuthToken { get; set; } = "";
+
+
+}

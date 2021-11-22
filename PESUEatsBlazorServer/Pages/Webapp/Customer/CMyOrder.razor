@@ -1,0 +1,15 @@
+﻿@page "/app/customer/myorder"
+@attribute [Authorize(Roles = "customer")]
+
+@inject PESUEatsBlazorServer.Services.PESUEatsWebAPIService PESUEatsWebAPI
+@inject IDialogService DialogService
+
+<PageTitle>🛎️ My Order</PageTitle>
+<h3>🛎️ My Order</h3>
+
+@code {
+    [CascadingParameter]
+    private string UserAuthToken { get; set; } = "";
+
+
+}

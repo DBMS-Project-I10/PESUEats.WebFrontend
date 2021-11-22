@@ -1,0 +1,59 @@
+﻿@page "/app/customer/orderfood"
+@attribute [Authorize(Roles = "customer")]
+
+@using PESUEatsBlazorServer.JSONBodyFormats.app.restaurant
+@inject PESUEatsBlazorServer.Services.PESUEatsWebAPIService PESUEatsWebAPI
+@inject IDialogService DialogService
+
+<PageTitle>Order Food</PageTitle>
+<h3>Order Food</h3>
+
+
+<MudTable Items="@restaurants" Hover="true" Breakpoint="Breakpoint.Sm" LoadingProgressColor="Color.Info">
+    <HeaderContent>
+        <MudTh>Name</MudTh>
+        <MudTh>Cuisine</MudTh>
+        <MudTh>Location</MudTh>
+        @*<MudTh>email</MudTh>*@
+        <MudTh>Rating</MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd DataLabel="RName">@context.name</MudTd>
+        <MudTd DataLabel="RCuisine">@context.cuisine</MudTd>
+        <MudTd DataLabel="RLocation">@context.location</MudTd>
+        @*<MudTd DataLabel="Remail">@context.email</MudTd>*@
+        <MudTd DataLabel="RRating">@context.rating</MudTd>
+    </RowTemplate>
+</MudTable>
+
+
+@code {
+    private IEnumerable<RestaurantsJSONResponse200> restaurants = new List<RestaurantsJSONResponse200>();
+
+    [CascadingParameter]
+    private string UserAuthToken { get; set; } = "";
+
+    protected override async void OnInitialized()
+    {
+        (bool, List<RestaurantsJSONResponse200>?, string?) result = await PESUEatsWebAPI.GetRestaurantsAsync(UserAuthToken);
+
+        bool success = result.Item1;
+        List<RestaurantsJSONResponse200> _restaurants = result.Item2 ?? new List<RestaurantsJSONResponse200>();
+        string errorMessage = result.Item3 ?? "";
+
+        if (success)
+        {
+            restaurants = _restaurants;
+            StateHasChanged();
+        }
+        else
+        {
+            await DialogService.ShowMessageBox(
+                "Warning", 
+                errorMessage,
+                yesText:"close"
+            );
+            StateHasChanged();
+        }
+    }
+}

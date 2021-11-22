@@ -1,0 +1,15 @@
+﻿@page "/app/restaurant/menu"
+@attribute [Authorize(Roles = "restaurant")]
+
+@inject PESUEatsBlazorServer.Services.PESUEatsWebAPIService PESUEatsWebAPI
+@inject IDialogService DialogService
+
+<PageTitle>🍱 Menu</PageTitle>
+<h3>🍱 Menu</h3>
+
+@code {
+    [CascadingParameter]
+    private string UserAuthToken { get; set; } = "";
+
+
+}

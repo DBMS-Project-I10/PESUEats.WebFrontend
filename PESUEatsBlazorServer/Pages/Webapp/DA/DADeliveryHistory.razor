@@ -1,0 +1,15 @@
+﻿@page "/app/da/deliveryhistory"
+@attribute [Authorize(Roles = "da")]
+
+@inject PESUEatsBlazorServer.Services.PESUEatsWebAPIService PESUEatsWebAPI
+@inject IDialogService DialogService
+
+<PageTitle>📃 Delivery History</PageTitle>
+<h3>📃 Delivery History</h3>
+
+@code {
+    [CascadingParameter]
+    private string UserAuthToken { get; set; } = "";
+
+
+}

@@ -15,12 +15,4 @@
     <PackageReference Include="Npgsql" Version="6.0.0" />
   </ItemGroup>
 
-  <ItemGroup>
-	<Folder Include="Pages\Webapp\Customer\" />
-	<Folder Include="Pages\Webapp\DA\" />
-	<Folder Include="Pages\Webapp\Restaurant\" />
-    <Folder Include="Pages\Admin\" />
-    <Folder Include="Services\" />
-  </ItemGroup>
-
 </Project>

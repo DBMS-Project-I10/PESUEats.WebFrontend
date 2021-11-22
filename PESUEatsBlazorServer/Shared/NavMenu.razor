@@ -1,43 +1,43 @@
 ﻿<MudNavMenu>
     <MudNavLink Href="" Match="NavLinkMatch.All">Home</MudNavLink>
-    <MudNavGroup Title="🍱 PESUEats App" Expanded="true">
+    <MudNavGroup Title="😋 PESUEats App" Expanded="true">
         <AuthorizeView Roles="customer,da,restaurant,admin">
             <Authorized>
 
-                <MudNavLink Href="/app/shared/profile">My Profile</MudNavLink>
+                <MudNavLink Href="/app/shared/profile">🧑🏻‍🦰 My Profile</MudNavLink>
 
                 <AuthorizeView Roles="customer" Context="customerUser">
                     <Authorized>
-                        <MudNavLink Href="/app/customer/orderfood">Order Food</MudNavLink>
-                        <MudNavLink Href="/app/customer/myorder">My Order</MudNavLink>
-                        <MudNavLink Href="/app/customer/orderhistory">Order History</MudNavLink>
+                        <MudNavLink Href="/app/customer/orderfood">🍱 Order Food</MudNavLink>
+                        <MudNavLink Href="/app/customer/myorder">🛎️ My Order</MudNavLink>
+                        <MudNavLink Href="/app/customer/orderhistory">📃 Order History</MudNavLink>
                     </Authorized>
                 </AuthorizeView>
 
                 <AuthorizeView Roles="restaurant" Context="restaurantUser">
                     <Authorized>
-                        <MudNavLink Href="/app/restaurant/menu">Menu</MudNavLink>
-                        <MudNavLink Href="/app/restaurant/currentorders">Current Orders</MudNavLink>
-                        <MudNavLink Href="/app/restaurant/orderhistory">Order History</MudNavLink>
+                        <MudNavLink Href="/app/restaurant/menu">🍱 Menu</MudNavLink>
+                        <MudNavLink Href="/app/restaurant/currentorders">🛎️ Current Orders</MudNavLink>
+                        <MudNavLink Href="/app/restaurant/orderhistory">📃 Order History</MudNavLink>
                     </Authorized>
                 </AuthorizeView>
 
                 <AuthorizeView Roles="da" Context="daUser">
                     <Authorized>
-                        <MudNavLink Href="/app/da/currentdelivery">Current Delivery</MudNavLink>
-                        <MudNavLink Href="/app/da/deliveryhistory">Delivery History</MudNavLink>
+                        <MudNavLink Href="/app/da/currentdelivery">🚚 Current Delivery</MudNavLink>
+                        <MudNavLink Href="/app/da/deliveryhistory">📃 Delivery History</MudNavLink>
                     </Authorized>
                 </AuthorizeView>
                 
                 <AuthorizeView Roles="customer,da,restaurant" Context="nonadminUser">
                     <Authorized>
-                        <MudNavLink Href="/app/shared/wallet">My Wallet</MudNavLink>
+                        <MudNavLink Href="/app/shared/wallet">👛 My Wallet</MudNavLink>
                     </Authorized>
                 </AuthorizeView>
 
             </Authorized>
             <NotAuthorized>
-                <p>You need to Log in</p>
+                <MudNavLink Href="/signin">Please Sign in</MudNavLink>
             </NotAuthorized>
         </AuthorizeView>
     </MudNavGroup>
@@ -45,7 +45,7 @@
         <Authorized>
             <MudNavGroup Title="🚨 Admin" Expanded="false">
                 <MudNavLink Href="/admin/overview">Overview</MudNavLink>
-                <MudNavLink Href="/admin/ls/restaurants">Restaurants</MudNavLink>
+                @*<MudNavLink Href="/admin/ls/restaurants">Restaurants</MudNavLink>*@
             </MudNavGroup>
         </Authorized>
     </AuthorizeView>

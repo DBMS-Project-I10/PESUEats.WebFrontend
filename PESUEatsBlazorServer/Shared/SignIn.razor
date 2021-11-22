@@ -9,17 +9,26 @@
 @inject NavigationManager navMan
 @inject AuthenticationStateProvider authStateProvider
 
-<MudForm>
-    <MudTextField T="string" Counter="EmailMaxCharLimit" @bind-Value="Email" Required="true"
-        HelperText="Enter your user ID" Label="Email" Variant="Variant.Text" Immediate="true"
-        Validation="@(new Func<string, IEnumerable<string>>(UsernameMaxCharCheck))" />
-    <MudTextField @bind-Value="Password" Label="Password" Variant="Variant.Text" 
-        InputType="@PasswordInput" Adornment="Adornment.End" Required="true"
-        AdornmentIcon="@PasswordInputIcon" OnAdornmentClick="passwordViewToggle" />
-</MudForm>
+<AuthorizeView>
+    <Authorized>
+        <MudText>You need to sign out is order to sign in with another account</MudText>
+    </Authorized>
+    <NotAuthorized>
+        <MudForm>
+            <MudTextField T="string" Counter="EmailMaxCharLimit" @bind-Value="Email" Required="true"
+                HelperText="Enter your user ID" Label="Email" Variant="Variant.Text" Immediate="true"
+                Validation="@(new Func<string, IEnumerable<string>>(UsernameMaxCharCheck))" />
+            <MudTextField @bind-Value="Password" Label="Password" Variant="Variant.Text" 
+                InputType="@PasswordInput" Adornment="Adornment.End" Required="true"
+                AdornmentIcon="@PasswordInputIcon" OnAdornmentClick="passwordViewToggle" />
+        </MudForm>
+        
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="TrySignin"
+            EndIcon="@Icons.Material.Filled.Login">Sign In</MudButton>
+    </NotAuthorized>
+</AuthorizeView>
 
-<MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="TrySignin"
-    EndIcon="@Icons.Material.Filled.Login">Sign In</MudButton>
+
 
 @code {
     public string Email { get; set;} = "";
@@ -45,7 +54,7 @@
             await DialogService.ShowMessageBox(
                 "Error",
                 message,
-                cancelText:"close"
+                yesText:"close"
             );
             StateHasChanged();
         }
@@ -63,7 +72,7 @@
                 await DialogService.ShowMessageBox(
                     "Error",
                     "Role assignment error",
-                    cancelText:"close"
+                    yesText:"close"
                 );
                 StateHasChanged();
             }

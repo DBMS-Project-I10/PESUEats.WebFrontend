@@ -6,7 +6,7 @@
 
 <AuthorizeView>
     <Authorized>
-        You are currently signed in as a @*(context.User.Claims.Where(i => i.Type == "").FirstOrDefault()??)*@ Sign out in order to signup.
+        You are currently signed in. Sign out in order to signup.
     </Authorized>
     <NotAuthorized>
         <MudTabs Elevation="4" Rounded="true" Centered="true" Color="@Color.Primary">

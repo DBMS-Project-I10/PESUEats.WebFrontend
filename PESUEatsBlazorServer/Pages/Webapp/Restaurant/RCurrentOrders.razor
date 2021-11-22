@@ -1,0 +1,15 @@
+﻿@page "/app/restaurant/currentorders"
+@attribute [Authorize(Roles = "restaurant")]
+
+@inject PESUEatsBlazorServer.Services.PESUEatsWebAPIService PESUEatsWebAPI
+@inject IDialogService DialogService
+
+<PageTitle>🛎️ Current Orders</PageTitle>
+<h3>🛎️ Current Orders</h3>
+
+@code {
+    [CascadingParameter]
+    private string UserAuthToken { get; set; } = "";
+
+
+}

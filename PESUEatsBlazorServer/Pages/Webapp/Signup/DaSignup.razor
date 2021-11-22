@@ -7,10 +7,10 @@
 @inject NavigationManager navMan
 
 <MudForm>
-    <MudTextField T="string" @bind-Value="Name" Required="false"
+    <MudTextField T="string" @bind-Value="Name" Required="true"
         HelperText="Enter your Name" Label="Name" Variant="Variant.Text" Immediate="true" />
     <MudTextField T="string" Counter="EmailMaxCharLimit" @bind-Value="Email" Required="true"
-        HelperText="Enter your user ID" Label="Email" Variant="Variant.Text" Immediate="true"
+        HelperText="Enter your Email ID" Label="Email" Variant="Variant.Text" Immediate="true"
         Validation="@(new Func<string, IEnumerable<string>>(UsernameMaxCharCheck))" />
     <MudTextField @bind-Value="Password" Label="Password" Variant="Variant.Text" 
         InputType="@PasswordInput" Adornment="Adornment.End" Required="true"
@@ -18,20 +18,14 @@
     <MudTextField @bind-Value="PasswordConfirm" Label="Confirm Password" Variant="Variant.Text" 
         InputType="@PasswordInput" Adornment="Adornment.End" Required="true"
         AdornmentIcon="@PasswordInputIcon" OnAdornmentClick="passwordViewToggle" />
-    <MudTextField T="string" @bind-Value="Phone" Required="true"
-        HelperText="Enter your user ID" Label="Phone" Variant="Variant.Text" Immediate="true"/>
-    <MudTextField T="string" @bind-Value="Address" Required="false"
-        HelperText="Enter your user ID" Label="Address" Variant="Variant.Text" Immediate="true" />
 </MudForm>
 
 <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="TrySingup"
-    EndIcon="@Icons.Material.Filled.PlusOne">Signup</MudButton>
+    EndIcon="@Icons.Material.Filled.Login">Signup</MudButton>
 
 @code {
-    public string? Name { get; set;}
-    public string Email { get; set;} = "test@email.com";
-    public string? Address { get; set;}
-    public string Phone { get; set;} = "1111111111";
+    public string Name { get; set; } = "some guy";
+    public string Email { get; set;} = "1@d.com";
     public string Password { get; set;} = "";
     public string PasswordConfirm { get; set;} = "";
 
@@ -48,15 +42,15 @@
             await DialogService.ShowMessageBox(
                 "Warning", 
                 "The passwords don't match!",
-                cancelText:"close"
+                yesText:"OK"
             );
             StateHasChanged();
         }
         else
         {
-            CustomerJSONRequest customer = new(Name, Email, Password, Phone, Address);
+            DaJSONRequest da = new(Name, Email, Password);
 
-            (bool, string) result = await PESUEatsWebAPI.SignupCustomerAsync(customer);
+            (bool, string) result = await PESUEatsWebAPI.SignupDaAsync(da);
             bool isSuccess = result.Item1;
             string message = result.Item2;
 
@@ -65,7 +59,7 @@
                 await DialogService.ShowMessageBox(
                     "Warning",
                     message,
-                    cancelText:"close"
+                    yesText:"OK"
                 );
                 StateHasChanged();
             }

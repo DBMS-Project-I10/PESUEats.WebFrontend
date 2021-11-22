@@ -1,0 +1,28 @@
+﻿@page "/signup"
+
+@using System.Security.Claims
+
+<h2>Signup</h2>
+
+<AuthorizeView>
+    <Authorized>
+        You are currently signed in as a @*(context.User.Claims.Where(i => i.Type == "").FirstOrDefault()??)*@ Sign out in order to signup.
+    </Authorized>
+    <NotAuthorized>
+        <MudTabs Elevation="4" Rounded="true" Centered="true" Color="@Color.Primary">
+            <MudTabPanel Text="Customer" ToolTip="Sign up as a Customer">
+                <CustomerSignup />
+            </MudTabPanel>
+            <MudTabPanel Text="Restaurant" ToolTip="Sign up as a Restaurant">
+                <RestaurantSignup />
+            </MudTabPanel>
+            <MudTabPanel Text="Delivery Agent" ToolTip="Sign up as a Delivery Agent">
+                <DaSignup />
+            </MudTabPanel>
+        </MudTabs>
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    
+}

@@ -7,7 +7,7 @@
 
 <MudButton OnClick="GetUsers">Get Users</MudButton>
 
-@if (users.Count() != 0)
+@*if (users.Count() != 0)
 {
 	<MudTable Items="@users" Hover="true" Breakpoint="Breakpoint.Sm" LoadingProgressColor="Color.Info">
         <HeaderContent>
@@ -23,12 +23,12 @@
 else
 {
 	<p>Something must have gone wrong. Try clicking the button again.</p>
-}
+}*@
 
 @code {
     //https://zetcode.com/csharp/postgresql/
 
-    private IEnumerable<User> users = new List<User>();
+    //private IEnumerable<User> users = new List<User>();
 
     //protected override async void OnInitialized()
     //{
@@ -37,7 +37,7 @@ else
 
     public async void GetUsers()
     {
-        users = await PESUEatsWebAPI.GetUsersAsync(null);
+        //users = await PESUEatsWebAPI.GetUsersAsync(null);
         StateHasChanged();
     }
 }

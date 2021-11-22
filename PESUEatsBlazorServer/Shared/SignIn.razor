@@ -1,0 +1,93 @@
+﻿@page "/signin"
+
+@using PESUEatsBlazorServer.JSONBodyFormats.Signin
+@using PESUEatsBlazorServer.JSONBodyFormats.general
+@using PESUEatsBlazorServer.Services
+
+@inject PESUEatsBlazorServer.Services.PESUEatsWebAPIService PESUEatsWebAPI
+@inject IDialogService DialogService
+@inject NavigationManager navMan
+@inject AuthenticationStateProvider authStateProvider
+
+<MudForm>
+    <MudTextField T="string" Counter="EmailMaxCharLimit" @bind-Value="Email" Required="true"
+        HelperText="Enter your user ID" Label="Email" Variant="Variant.Text" Immediate="true"
+        Validation="@(new Func<string, IEnumerable<string>>(UsernameMaxCharCheck))" />
+    <MudTextField @bind-Value="Password" Label="Password" Variant="Variant.Text" 
+        InputType="@PasswordInput" Adornment="Adornment.End" Required="true"
+        AdornmentIcon="@PasswordInputIcon" OnAdornmentClick="passwordViewToggle" />
+</MudForm>
+
+<MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="TrySignin"
+    EndIcon="@Icons.Material.Filled.Login">Sign In</MudButton>
+
+@code {
+    public string Email { get; set;} = "";
+    public string Password { get; set;} = "";
+
+    const int EmailMaxCharLimit = 256;
+
+    bool isShow;
+    InputType PasswordInput = InputType.Password;
+    string PasswordInputIcon = Icons.Material.Filled.VisibilityOff;
+
+    private async void TrySignin()
+    {
+        UserJSONRequest user = new(Email, Password);
+
+        (bool, string, PESUEatsRoles?) result = await PESUEatsWebAPI.SignInUserAsync(user);
+        bool isSuccess = result.Item1;
+        string message = result.Item2;
+        PESUEatsRoles? role = result.Item3;
+
+        if (!isSuccess)
+        {
+            await DialogService.ShowMessageBox(
+                "Error",
+                message,
+                cancelText:"close"
+            );
+            StateHasChanged();
+        }
+        else
+        {
+            //message is Token
+            if (role != null)
+            {
+                ((Services.PESUEatsAuthStateProvider)authStateProvider)
+                    .SigninUser(new User(message, Email, role??PESUEatsRoles.customer));
+                navMan.NavigateTo("/app/shared/profile", false);
+            }
+            else
+            {
+                await DialogService.ShowMessageBox(
+                    "Error",
+                    "Role assignment error",
+                    cancelText:"close"
+                );
+                StateHasChanged();
+            }
+        }
+    }
+
+    void passwordViewToggle()
+    {
+        if (isShow)
+        {
+            isShow = false;
+            PasswordInputIcon = Icons.Material.Filled.VisibilityOff;
+            PasswordInput = InputType.Password;
+        }
+        else {
+            isShow = true;
+            PasswordInputIcon = Icons.Material.Filled.Visibility;
+            PasswordInput = InputType.Text;
+        }
+    }
+
+    private IEnumerable<string> UsernameMaxCharCheck(string ch)
+    {
+        if (!string.IsNullOrEmpty(ch) && ch?.Length > EmailMaxCharLimit)
+            yield return "Max 25 characters";
+    }
+}

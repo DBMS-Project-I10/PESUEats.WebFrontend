@@ -4,6 +4,7 @@ using PESUEatsBlazorServer.Services;
 using MudBlazor.Services;
 using PESUEatsBlazorServer;
 using Microsoft.AspNetCore.Components.Authorization;
+using Blazored.SessionStorage;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,9 +16,10 @@ builder.Services.AddServerSideBlazor();
 // HttpClient is registered as a scoped service. (so, 1 client per user - changes across page refresh)
 builder.Services.AddHttpClient<PESUEatsWebAPIService>((client) =>
 {
-    client.BaseAddress = new Uri("https://localhost:7239");
+    client.BaseAddress = new Uri("http://127.0.0.1:5000/");
 });
 builder.Services.AddMudServices();
+builder.Services.AddBlazoredSessionStorage();
 builder.Services.AddScoped<AuthenticationStateProvider, PESUEatsAuthStateProvider>();
 
 var app = builder.Build();

@@ -2,44 +2,44 @@
 
 namespace PESUEatsBlazorServer.JSONBodyFormats.app.shared
 {
-	/*public class OrdersCurrentJSONResponse200
+	public class OrdersCurrentJSONResponse200
 	{
-		[JsonPropertyName("Oid")]
+		[JsonPropertyName("oid")]
 		public int id { get; set; }
 
-		[JsonPropertyName("OfromRid")]
+		[JsonPropertyName("ofromrid")]
 		public int fromRid { get; set; }
 
-		[JsonPropertyName("ODAid")]
-		public int? DAid { get; set; }
+		[JsonPropertyName("odaid")]
+		public int DAid { get; set; }
 
-		[JsonPropertyName("OtoCartId")]
+		[JsonPropertyName("otocartid")]
 		public int OtoCartId { get; set; }
 
-		[JsonPropertyName("OtoCartCustId")]
+		[JsonPropertyName("otocartcustid")]
 		public int OtoCartCustId { get; set; }
 
-		[JsonPropertyName("OETA")]
-		public NpgsqlDateTime? ETA { get; set; }
+		[JsonPropertyName("oeta")]
+		public string? ETA { get; set; }
 
-		[JsonPropertyName("OStatus")]
+		[JsonPropertyName("ostatus")]
 		public string status { get; set; }
 
-		[JsonPropertyName("OPlacedDateTime")]
-		public NpgsqlDateTime? placedDateTime { get; set; }
+		[JsonPropertyName("oplaceddatetime")]
+		public string? placedDateTime { get; set; }
 
-		public OrdersCurrentJSONResponse200(int id, int fromRid, int? DAid, int OtoCartId, int OtoCartCustId, NpgsqlDateTime? ETA, string status, NpgsqlDateTime? placedDateTime)
+		public OrdersCurrentJSONResponse200(int id, int fromRid, int daid, int OtoCartId, int OtoCartCustId, string? ETA, string status, string? placedDateTime)
 		{
 			this.id = id;
 			this.fromRid = fromRid;
-			this.DAid = DAid;
+			this.DAid = daid;
 			this.OtoCartId = OtoCartId;
 			this.OtoCartCustId = OtoCartCustId;
 			this.ETA = ETA;
 			this.status = status;
 			this.placedDateTime = placedDateTime;
 		}
-	}*/
+	}
 
 	public class GetCartIdJSONResponse200
 	{

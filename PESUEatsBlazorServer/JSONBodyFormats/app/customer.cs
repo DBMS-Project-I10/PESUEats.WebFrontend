@@ -15,7 +15,7 @@ namespace PESUEatsBlazorServer.JSONBodyFormats.app.customer
 
 		public AddToCartJSONRequest(int itemId, int cartId, int quantity)
 		{
-			this.ItemId = ItemId;
+			this.ItemId = itemId;
 			this.CartId = cartId;
 			this.Quantity = quantity;
 		}
@@ -46,7 +46,7 @@ namespace PESUEatsBlazorServer.JSONBodyFormats.app.customer
 
 		public RemoveFromCartJSONRequest(int itemId, int cartId)
 		{
-			this.ItemId = ItemId;
+			this.ItemId = itemId;
 			this.CartId = cartId;
 		}
 	}

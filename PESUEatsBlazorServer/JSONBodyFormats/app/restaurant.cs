@@ -69,4 +69,15 @@ namespace PESUEatsBlazorServer.JSONBodyFormats.app.restaurant
 			this.Category = category;
 		}
 	}
+
+	public class ChangeStatusJSONRequest
+	{
+		[JsonPropertyName("oid")]
+		public int OId { get; set; }
+
+		public ChangeStatusJSONRequest(int id)
+		{
+			this.OId = id;
+		}
+	}
 }

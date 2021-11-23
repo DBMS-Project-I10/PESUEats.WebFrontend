@@ -71,9 +71,8 @@
         <MudTable Items="@cartItems" Hover="true" Breakpoint="Breakpoint.Sm" LoadingProgressColor="Color.Info">
             <HeaderContent>
                 <MudTh>Name</MudTh>
-                <MudTh>Category</MudTh>
-                <MudTh>Description</MudTh>
                 <MudTh>Price</MudTh>
+                <MudTh>Quantity</MudTh>
                 <MudTh>Delete</MudTh>
             </HeaderContent>
             <RowTemplate>
@@ -82,7 +81,7 @@
                 <MudTd DataLabel="MIQuantity">@context.Quantity</MudTd>
                 <MudTd DataLabel="Delete">
                     <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(() => RemoveFromCart(@context.id))"
-                    EndIcon="@Icons.Material.Filled.PlusOne">Cart</MudButton>
+                    EndIcon="@Icons.Material.Filled.Delete">Delete</MudButton>
                 </MudTd>
             </RowTemplate>
         </MudTable>
@@ -148,6 +147,8 @@
                     yesText: "close"
                 );
                 StateHasChanged();
+                await FinalizeCart();
+                StateHasChanged();
             }
         }
     }
@@ -173,8 +174,8 @@
         {
             (bool, AddToCartJSONResponse200?, string?) result2 =
                 await PESUEatsWebAPI.AddToCart(UserAuthToken, new AddToCartJSONRequest(Iid, result.Item2.Cartid, Quantity));
-            bool isSuccess2 = result.Item1;
-            string? message2 = result.Item3;
+            bool isSuccess2 = result2.Item1;
+            string? message2 = result2.Item3;
 
             if (!isSuccess2)
             {
@@ -217,8 +218,8 @@
         {
             (bool, PlaceOrderJSONResponse200?, string?) result2 =
                 await PESUEatsWebAPI.PlaceOrder(UserAuthToken, new PlaceOrderJSONRequest(result.Item2.Cartid));
-            bool isSuccess2 = result.Item1;
-            string? message2 = result.Item3;
+            bool isSuccess2 = result2.Item1;
+            string? message2 = result2.Item3;
 
             if (!isSuccess2)
             {
@@ -242,7 +243,7 @@
         }
     }
 
-    private async void FinalizeCart()
+    private async Task FinalizeCart()
     {
         (bool, GetCartIdJSONResponse200?, string?) result =
             await PESUEatsWebAPI.GetActiveCartID(UserAuthToken);
@@ -276,6 +277,7 @@
         {
             cartItems = _menuItems;
             StateHasChanged();
+            tabs.ActivatePanel(2);
         }
         else
         {

@@ -1,15 +1,100 @@
 ﻿@page "/app/customer/myorder"
 @attribute [Authorize(Roles = "customer")]
 
+@using PESUEatsBlazorServer.JSONBodyFormats.app.shared
+@using PESUEatsBlazorServer.JSONBodyFormats.app.restaurant
 @inject PESUEatsBlazorServer.Services.PESUEatsWebAPIService PESUEatsWebAPI
 @inject IDialogService DialogService
 
 <PageTitle>🛎️ My Order</PageTitle>
 <h3>🛎️ My Order</h3>
 
+@if(enabled)
+{
+<MudCard>
+    <MudCardContent>
+        <MudText>Your Order's Status: @status</MudText>
+        <MudText>You ordered it from: @restaurant</MudText>
+        <MudText Typo="Typo.body2">You placed your order at @placedDateTime</MudText>
+    </MudCardContent>
+</MudCard>
+}
+else
+{
+    <MudText>You have no current orders</MudText>
+}
+
+<MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Reload"
+    EndIcon="@Icons.Material.Filled.Refresh">Reload</MudButton>
+
 @code {
     [CascadingParameter]
     private string UserAuthToken { get; set; } = "";
+
+    private string status { get; set; } = "";
+    private string restaurant { get; set; } = "";
+    private string placedDateTime { get; set; } = "";
+
+    private bool enabled = false;
+
+    protected override async void OnInitialized()
+    {
+        await SetCurrentOrder();
+    }
+
+    private async void Reload()
+    {
+        await SetCurrentOrder();
+    }
+
+    private async Task SetCurrentOrder()
+    {
+
+        (bool, OrdersCurrentJSONResponse200?, string?) result =
+            await PESUEatsWebAPI.GetMyCurrentOrder(UserAuthToken);
+        bool isSuccess = result.Item1;
+        string? message = result.Item3;
+
+        if (!isSuccess)
+        {
+            await DialogService.ShowMessageBox(
+                "Warning",
+                message??"",
+                yesText:"OK"
+            );
+            StateHasChanged();
+            enabled = false;
+        }
+        else
+        {
+            enabled = true;
+
+            OrdersCurrentJSONResponse200 currentOrder = result.Item2;
+            status = currentOrder.status;
+            placedDateTime = currentOrder.placedDateTime;
+
+            (bool, List<RestaurantsJSONResponse200>?, string?) result2 = await PESUEatsWebAPI.GetRestaurantsAsync(UserAuthToken);
+
+            bool success = result2.Item1;
+            List<RestaurantsJSONResponse200> _restaurants = result2.Item2 ?? new List<RestaurantsJSONResponse200>();
+            string errorMessage = result2.Item3 ?? "";
+
+            if (success)
+            {
+                restaurant = _restaurants.Where(r => r.id == currentOrder.fromRid).FirstOrDefault().name;
+                StateHasChanged();
+            }
+            else
+            {
+                await DialogService.ShowMessageBox(
+                    "Warning", 
+                    errorMessage,
+                    yesText:"close"
+                );
+                StateHasChanged();
+            }
+        }
+    }
 
 
 }

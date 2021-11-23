@@ -1,15 +1,146 @@
 ﻿@page "/app/restaurant/currentorders"
 @attribute [Authorize(Roles = "restaurant")]
 
+@using PESUEatsBlazorServer.JSONBodyFormats.app.restaurant
+@using PESUEatsBlazorServer.JSONBodyFormats.app.shared
 @inject PESUEatsBlazorServer.Services.PESUEatsWebAPIService PESUEatsWebAPI
 @inject IDialogService DialogService
 
 <PageTitle>🛎️ Current Orders</PageTitle>
 <h3>🛎️ Current Orders</h3>
 
+<MudTable Items="@currentOrders" Hover="true" Breakpoint="Breakpoint.Sm" LoadingProgressColor="Color.Info">
+    <HeaderContent>
+        <MudTh>Order ID</MudTh>
+        <MudTh>Status</MudTh>
+        <MudTh>Placed at</MudTh>
+        <MudTh>Confirm preperation</MudTh>
+        <MudTh>Handover to Delivery agent</MudTh>
+        <MudTh>View Cart</MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd DataLabel="Id">@context.id</MudTd>
+        <MudTd DataLabel="Status">@context.status</MudTd>
+        <MudTd DataLabel="placed">@context.placedDateTime</MudTd>
+        <MudTd DataLabel="confirm">
+            <MudIconButton Variant="Variant.Filled" Color="Color.Primary" 
+            OnClick="@(() => ConfirmPreparation(@context.id))" Icon="@Icons.Material.Filled.Delete" />
+        </MudTd>
+        <MudTd DataLabel="handover">
+            <MudIconButton Variant="Variant.Filled" Color="Color.Primary" 
+            OnClick="@(() => HandoverToDA(@context.id))" Icon="@Icons.Material.Filled.Delete" />
+        </MudTd>
+        <MudTd DataLabel="viewcart">
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(() => ViewCart(@context.OtoCartId))"
+                >View Cart</MudButton>
+        </MudTd>
+    </RowTemplate>
+</MudTable>
+
+<MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Reload"
+    EndIcon="@Icons.Material.Filled.Refresh">Reload</MudButton>
+
 @code {
     [CascadingParameter]
     private string UserAuthToken { get; set; } = "";
+    private IEnumerable<OrdersCurrentJSONResponse200> currentOrders = new List<OrdersCurrentJSONResponse200>();
+    
+    protected override async void OnInitialized()
+    {
+        await SetCurrentOrders();
+    }
+
+    private async void Reload()
+    {
+        await SetCurrentOrders();
+    }
+
+    private async Task HandoverToDA(int id)
+    {
+        (bool, string?) result =
+            await PESUEatsWebAPI.ChangeStatusToPickedUp(UserAuthToken, new ChangeStatusJSONRequest(id));
+        bool isSuccess = result.Item1;
+        string? message = result.Item2;
+
+        if (!isSuccess)
+        {
+            await DialogService.ShowMessageBox(
+                "Warning",
+                message??"",
+                yesText:"OK"
+            );
+            StateHasChanged();
+        }
+        else
+        {
+            await DialogService.ShowMessageBox(
+                "Success",
+                "Handed over to delivery agent",
+                yesText:"OK"
+            );
+            StateHasChanged();
+            await SetCurrentOrders();
+            StateHasChanged();
+        }
+    }
+
+    private async Task ConfirmPreparation(int id)
+    {
+        (bool, string?) result =
+            await PESUEatsWebAPI.ChangeStatusToPrep(UserAuthToken, new ChangeStatusJSONRequest(id));
+        bool isSuccess = result.Item1;
+        string? message = result.Item2;
+
+        if (!isSuccess)
+        {
+            await DialogService.ShowMessageBox(
+                "Warning",
+                message??"",
+                yesText:"OK"
+            );
+            StateHasChanged();
+        }
+        else
+        {
+            await DialogService.ShowMessageBox(
+                "Success",
+                "Handed over to delivery agent",
+                yesText:"OK"
+            );
+            StateHasChanged();
+            await SetCurrentOrders();
+            StateHasChanged();
+        }
+    }
+
+    private async Task ViewCart(int id)
+    {
+        
+    }
+
+    private async Task SetCurrentOrders()
+    {
+
+        (bool, List<OrdersCurrentJSONResponse200>?, string?) result =
+            await PESUEatsWebAPI.GetCurrentOrdersForRestaurant(UserAuthToken);
+        bool isSuccess = result.Item1;
+        string? message = result.Item3;
+
+        if (!isSuccess)
+        {
+            await DialogService.ShowMessageBox(
+                "Warning",
+                message??"",
+                yesText:"OK"
+            );
+            StateHasChanged();
+        }
+        else
+        {
+            List<OrdersCurrentJSONResponse200> currentOrder = result.Item2 ?? 
+                new List<OrdersCurrentJSONResponse200>();
+        }
+    }
 
 
 }

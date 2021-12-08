@@ -13,7 +13,7 @@ namespace PESUEatsBlazorServer.Services
             {
                 HttpResponseMessage response;
                 client.DefaultRequestHeaders.Add("token", token);
-                response = await client.GetAsync($"showcart?cartid={cartId}");
+                response = await client.GetAsync($"/showcart?cartid={cartId}");
 
                 if ((int)response.StatusCode == 200)
                 {

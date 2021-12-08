@@ -1,10 +1,12 @@
 ﻿@page "/app/restaurant/currentorders"
 @attribute [Authorize(Roles = "restaurant")]
 
+@using PESUEatsBlazorServer.JSONBodyFormats.app.customer
 @using PESUEatsBlazorServer.JSONBodyFormats.app.restaurant
 @using PESUEatsBlazorServer.JSONBodyFormats.app.shared
 @inject PESUEatsBlazorServer.Services.PESUEatsWebAPIService PESUEatsWebAPI
 @inject IDialogService DialogService
+@inject NavigationManager navMan
 
 <PageTitle>🛎️ Current Orders</PageTitle>
 <h3>🛎️ Current Orders</h3>
@@ -16,7 +18,7 @@
         <MudTh>Placed at</MudTh>
         <MudTh>Confirm preperation</MudTh>
         <MudTh>Handover to Delivery agent</MudTh>
-        @*<MudTh>View Cart</MudTh>*@
+        <MudTh>View Cart</MudTh>
     </HeaderContent>
     <RowTemplate>
         <MudTd DataLabel="Id">@context.id</MudTd>
@@ -31,21 +33,40 @@
             <MudIconButton Variant="Variant.Filled" Color="Color.Primary" Disabled="@(context.status == "PICKED UP")"
             OnClick="@(() => HandoverToDA(@context.id))" Icon="@Icons.Material.Filled.Done" />
         </MudTd>
-        @*<MudTd DataLabel="viewcart">
+        <MudTd DataLabel="viewcart">
             <MudButton Variant="Variant.Filled" Color="Color.Primary"
             OnClick="@(() => ViewCart(@context.OtoCartId))">View Cart</MudButton>
-        </MudTd>*@
+        </MudTd>
     </RowTemplate>
 </MudTable>
 
 <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Reload"
     EndIcon="@Icons.Material.Filled.Refresh">Reload</MudButton>
 
+<MudPopover Open="@_isOpen" Fixed="true" AnchorOrigin="@Origin.BottomLeft" TransformOrigin="@Origin.TopLeft">
+    <MudTable Items="@cartItems" Hover="true" Breakpoint="Breakpoint.Sm" LoadingProgressColor="Color.Info">
+            <HeaderContent>
+                <MudTh>Name</MudTh>
+                <MudTh>Price</MudTh>
+                <MudTh>Quantity</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="IName">@context.Name</MudTd>
+                <MudTd DataLabel="IPrice">@context.Price</MudTd>
+                <MudTd DataLabel="MIQuantity">@context.Quantity</MudTd>
+            </RowTemplate>
+        </MudTable>
+    <MudButton OnClick="@ToggleOpen">Close</MudButton>
+</MudPopover>
+
 @code {
     [CascadingParameter]
     private string UserAuthToken { get; set; } = "";
     private IEnumerable<OrdersCurrentJSONResponse200> currentOrders = new List<OrdersCurrentJSONResponse200>();
-    
+    private List<ShowCartJSONResponse200> cartItems = new List<ShowCartJSONResponse200>();
+
+    public bool _isOpen = false;
+
     protected override async void OnInitialized()
     {
         await SetCurrentOrders();
@@ -54,6 +75,31 @@
     private async void Reload()
     {
         await SetCurrentOrders();
+    }
+
+    private async Task ViewCart(int id)
+    {
+        (bool, List<ShowCartJSONResponse200>?, string?) result = await PESUEatsWebAPI.ShowCart(UserAuthToken, id);
+
+        bool success = result.Item1;
+        List<ShowCartJSONResponse200> _menuItems = result.Item2 ?? new List<ShowCartJSONResponse200>();
+        string errorMessage = result.Item3 ?? "";
+
+        if (success)
+        {
+            cartItems = _menuItems;
+            StateHasChanged();
+            ToggleOpen();
+        }
+        else
+        {
+            await DialogService.ShowMessageBox(
+                "Warning", 
+                errorMessage,
+                yesText:"close"
+            );
+            StateHasChanged();
+        }
     }
 
     private async Task HandoverToDA(int id)
@@ -114,11 +160,6 @@
         }
     }
 
-    private async Task ViewCart(int id)
-    {
-        
-    }
-
     private async Task SetCurrentOrders()
     {
 
@@ -142,6 +183,12 @@
                 new List<OrdersCurrentJSONResponse200>();
         }
     }
-
-
+    
+    public void ToggleOpen()
+    {
+        if (_isOpen)
+            _isOpen = false;
+        else
+            _isOpen = true;
+    }
 }

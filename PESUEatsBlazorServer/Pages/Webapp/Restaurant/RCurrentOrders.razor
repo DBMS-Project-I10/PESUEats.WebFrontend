@@ -16,7 +16,7 @@
         <MudTh>Placed at</MudTh>
         <MudTh>Confirm preperation</MudTh>
         <MudTh>Handover to Delivery agent</MudTh>
-        <MudTh>View Cart</MudTh>
+        @*<MudTh>View Cart</MudTh>*@
     </HeaderContent>
     <RowTemplate>
         <MudTd DataLabel="Id">@context.id</MudTd>
@@ -24,16 +24,17 @@
         <MudTd DataLabel="placed">@context.placedDateTime</MudTd>
         <MudTd DataLabel="confirm">
             <MudIconButton Variant="Variant.Filled" Color="Color.Primary" 
-            OnClick="@(() => ConfirmPreparation(@context.id))" Icon="@Icons.Material.Filled.Delete" />
+            Disabled="@(context.status == "PREPARING" || context.status == "PICKED UP")"
+            OnClick="@(() => ConfirmPreparation(@context.id))" Icon="@Icons.Material.Filled.Done" />
         </MudTd>
         <MudTd DataLabel="handover">
-            <MudIconButton Variant="Variant.Filled" Color="Color.Primary" 
-            OnClick="@(() => HandoverToDA(@context.id))" Icon="@Icons.Material.Filled.Delete" />
+            <MudIconButton Variant="Variant.Filled" Color="Color.Primary" Disabled="@(context.status == "PICKED UP")"
+            OnClick="@(() => HandoverToDA(@context.id))" Icon="@Icons.Material.Filled.Done" />
         </MudTd>
-        <MudTd DataLabel="viewcart">
-            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(() => ViewCart(@context.OtoCartId))"
-                >View Cart</MudButton>
-        </MudTd>
+        @*<MudTd DataLabel="viewcart">
+            <MudButton Variant="Variant.Filled" Color="Color.Primary"
+            OnClick="@(() => ViewCart(@context.OtoCartId))">View Cart</MudButton>
+        </MudTd>*@
     </RowTemplate>
 </MudTable>
 
@@ -137,7 +138,7 @@
         }
         else
         {
-            List<OrdersCurrentJSONResponse200> currentOrder = result.Item2 ?? 
+            currentOrders = result.Item2 ?? 
                 new List<OrdersCurrentJSONResponse200>();
         }
     }

@@ -70,6 +70,29 @@ namespace PESUEatsBlazorServer.JSONBodyFormats.app.restaurant
 		}
 	}
 
+	public class AddMenuItemJSONRequest
+	{
+		[JsonPropertyName("itemname")]
+		public string Name { get; set; }
+
+		[JsonPropertyName("price")]
+		public float Price { get; set; }
+
+		[JsonPropertyName("desc")]
+		public string Description { get; set; }
+
+		[JsonPropertyName("category")]
+		public string Category { get; set; }
+
+		public AddMenuItemJSONRequest(string name, float price, string description, string category)
+		{
+			this.Name = name;
+			this.Price = price;
+			this.Description = description;
+			this.Category = category;
+		}
+	}
+
 	public class ChangeStatusJSONRequest
 	{
 		[JsonPropertyName("oid")]

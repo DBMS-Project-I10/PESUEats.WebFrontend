@@ -93,6 +93,138 @@ namespace PESUEatsBlazorServer.Services
         }
 
 
+        public async Task<(bool, List<MenuItemsJSONResponse200>?, string?)> GetRestaurantMenuItemsAsync(string token)
+        {
+            try
+            {
+                HttpResponseMessage response;
+                client.DefaultRequestHeaders.Clear();
+                client.DefaultRequestHeaders.Add("token", token);
+                response = await client.GetAsync($"restmenuitems");
+
+                if ((int)response.StatusCode == 200)
+                {
+                    using var responseContent = await response.Content.ReadAsStreamAsync();
+                    List<MenuItemsJSONResponse200>? menuItems = await JsonSerializer.DeserializeAsync<List<MenuItemsJSONResponse200>>(responseContent);
+                    if (menuItems != null)
+                    {
+                        return (true, menuItems, null);
+                    }
+                    else
+                    {
+                        return (false, null, "devError: error serializing JSON");
+                    }
+                }
+                else if ((int)response.StatusCode == 400)
+                {
+                    using var responseContent = await response.Content.ReadAsStreamAsync();
+                    ErrorMessage error = (await JsonSerializer.DeserializeAsync<ErrorMessage>(responseContent) ??
+                        new ErrorMessage("No error message/JSON serialize fail"));
+                    return (false, null, $"{error.Message}");
+                }
+                else
+                    return (false, null, new ErrorMessage("Unknown Error").Message);
+            }
+            catch (Exception e)
+            {
+                return (false, null, new ErrorMessage("Fatal error").Message);
+            }
+            finally
+            {
+                client.DefaultRequestHeaders.Clear();
+            }
+        }
+
+        public async Task<(bool, string?)>
+            AddMenuItemToRestaurantAsync(string token, AddMenuItemJSONRequest addMenuItemJSONRequest)
+        {
+            try
+            {
+                HttpResponseMessage response;
+                client.DefaultRequestHeaders.Add("token", token);
+                response = await client.PostAsJsonAsync("addmenuitem", addMenuItemJSONRequest);
+
+                if ((int)response.StatusCode == 200)
+                {
+                    //using var responseContent = await response.Content.ReadAsStreamAsync();
+                    //? jsonResponse =
+                    //    await JsonSerializer.DeserializeAsync<>(responseContent);
+                    /*if (jsonResponse != null)
+                    {
+                        return (true, jsonResponse, null);
+                    }
+                    else
+                    {
+                        return (false, null, "devError: error serializing JSON");
+                    }*/
+
+                    return (true, null);
+                }
+                else if ((int)response.StatusCode == 400)
+                {
+                    using var responseContent = await response.Content.ReadAsStreamAsync();
+                    ErrorMessage error = (await JsonSerializer.DeserializeAsync<ErrorMessage>(responseContent) ??
+                        new ErrorMessage("No error message/JSON serialize fail"));
+                    return (false, error.Message);
+                }
+                else
+                    return (false, new ErrorMessage("Unknown Error").Message);
+            }
+            catch (Exception e)
+            {
+                return (false, new ErrorMessage($"Fatal error: {e.Message}").Message);
+            }
+            finally
+            {
+                client.DefaultRequestHeaders.Clear();
+            }
+        }
+
+        public async Task<(bool, string?)> 
+            RemoveMenuItemFromRestaurantAsync(string token, int iid)
+        {
+            try
+            {
+                HttpResponseMessage response;
+                client.DefaultRequestHeaders.Clear();
+                client.DefaultRequestHeaders.Add("token", token);
+                response = await client.GetAsync($"delmenuitem?iid={iid}");
+
+                if ((int)response.StatusCode == 200)
+                {
+                    /*using var responseContent = await response.Content.ReadAsStreamAsync();
+                    List<MenuItemsJSONResponse200>? menuItems = await JsonSerializer.DeserializeAsync<List<MenuItemsJSONResponse200>>(responseContent);
+                    if (menuItems != null)
+                    {
+                        return (true, menuItems, null);
+                    }
+                    else
+                    {
+                        return (false, null, "devError: error serializing JSON");
+                    }*/
+                    return (true, null);
+                }
+                else if ((int)response.StatusCode == 400)
+                {
+                    using var responseContent = await response.Content.ReadAsStreamAsync();
+                    ErrorMessage error = (await JsonSerializer.DeserializeAsync<ErrorMessage>(responseContent) ??
+                        new ErrorMessage("No error message/JSON serialize fail"));
+                    return (false, $"{error.Message}");
+                }
+                else
+                    return (false, new ErrorMessage("Unknown Error").Message);
+            }
+            catch (Exception e)
+            {
+                return (false, new ErrorMessage("Fatal error").Message);
+            }
+            finally
+            {
+                client.DefaultRequestHeaders.Clear();
+            }
+        }
+
+
         public async Task<(bool, List<OrdersCurrentJSONResponse200>?, string?)>
                 GetCurrentOrdersForRestaurant (string token)
         {

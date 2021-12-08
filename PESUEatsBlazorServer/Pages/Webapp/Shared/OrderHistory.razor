@@ -1,33 +1,73 @@
 ﻿@page "/app/shared/orderhistory"
 @attribute [Authorize(Roles = "customer,restaurant,da")]
 
+@using PESUEatsBlazorServer.JSONBodyFormats.app.shared
+@using PESUEatsBlazorServer.JSONBodyFormats.app.restaurant
 @inject PESUEatsBlazorServer.Services.PESUEatsWebAPIService PESUEatsWebAPI
 @inject IDialogService DialogService
+
 
 <PageTitle>📃 Order History</PageTitle>
 <h3>📃 Order History</h3>
 
-<AuthorizeView Roles="customer">
-    <Authorized>
-        customer
-    </Authorized>
-</AuthorizeView>
+ <MudTable Items="@orders" Hover="true" Breakpoint="Breakpoint.Sm" LoadingProgressColor="Color.Info">
+     <HeaderContent>
+         <MudTh>Order ID</MudTh>
+         <MudTh>Customer ID</MudTh>
+         <MudTh>Restaurant ID</MudTh>
+         <MudTh>Delivery agent ID</MudTh>
+         <MudTh>Placed Date time</MudTh>
+     </HeaderContent>
+     <RowTemplate>
+         <MudTd DataLabel="">@context.id</MudTd>
+         <MudTd DataLabel="">@context.OtoCartCustId</MudTd>
+         <MudTd DataLabel="">@context.fromRid</MudTd>
+         <MudTd DataLabel="">@context.DAid</MudTd>
+         <MudTd DataLabel="">@context.placedDateTime</MudTd>
+     </RowTemplate>
+ </MudTable>
 
-<AuthorizeView Roles="restaurant">
-    <Authorized>
-        restaurant
-    </Authorized>
-</AuthorizeView>
+<MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Reload"
+    EndIcon="@Icons.Material.Filled.Refresh">Reload</MudButton>
 
-<AuthorizeView Roles="da">
-    <Authorized>
-        da
-    </Authorized>
-</AuthorizeView>
 
 @code {
     [CascadingParameter]
     private string UserAuthToken { get; set; } = "";
 
+    List<OrdersCurrentJSONResponse200> orders = new List<OrdersCurrentJSONResponse200>();
 
+    protected override async void OnInitialized()
+    {
+        await GetOrderHistory();
+    }
+
+    private async void Reload()
+    {
+        await GetOrderHistory();
+    }
+
+    private async Task GetOrderHistory()
+    {
+
+        (bool, List<OrdersCurrentJSONResponse200>?, string?) result =
+            await PESUEatsWebAPI.GetOrderHistory(UserAuthToken);
+        bool isSuccess = result.Item1;
+        string? message = result.Item3;
+
+        if (!isSuccess)
+        {
+            await DialogService.ShowMessageBox(
+                "Warning",
+                message??"",
+                yesText:"OK"
+            );
+            StateHasChanged();
+        }
+        else
+        {
+            orders = result.Item2 ?? new List<OrdersCurrentJSONResponse200>();
+            StateHasChanged();
+        }
+    }
 }

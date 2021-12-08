@@ -3,13 +3,161 @@
 
 @inject PESUEatsBlazorServer.Services.PESUEatsWebAPIService PESUEatsWebAPI
 @inject IDialogService DialogService
+@using PESUEatsBlazorServer.JSONBodyFormats.app.customer
+@using PESUEatsBlazorServer.JSONBodyFormats.app.restaurant
+@using PESUEatsBlazorServer.JSONBodyFormats.app.shared
+@inject NavigationManager navMan
 
 <PageTitle>🍱 Menu</PageTitle>
 <h3>🍱 Menu</h3>
+
+ <MudTable Items="@menuItems" Hover="true" Breakpoint="Breakpoint.Sm" LoadingProgressColor="Color.Info">
+     <HeaderContent>
+         <MudTh>Name</MudTh>
+         <MudTh>Category</MudTh>
+         <MudTh>Description</MudTh>
+         <MudTh>Price</MudTh>
+         <MudTh>Remove Item</MudTh>
+         @*<MudTh>
+             Quantity:
+             <MudNumericField @bind-Value="Quantity" Label="Filled" Variant="Variant.Text" Min="0" Max="10" />
+         </MudTh>*@
+     </HeaderContent>
+     <RowTemplate>
+         <MudTd DataLabel="iName">@context.Name</MudTd>
+         <MudTd DataLabel="iCategory">@context.Category</MudTd>
+         <MudTd DataLabel="iDescription">@context.Description</MudTd>
+         <MudTd DataLabel="iPrice">@context.Price</MudTd>
+         <MudTd DataLabel="iRemoveItem">
+             <MudIconButton Variant="Variant.Filled" Color="Color.Primary" 
+             OnClick="@(() => RemoveMenuItem(@context.Id))" Icon="@Icons.Material.Filled.Delete" />
+         </MudTd>
+     </RowTemplate>
+ </MudTable>
+ 
+ <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@ToggleOpen"
+     StartIcon="@Icons.Material.Filled.Add">Add Menu Item</MudButton>
+
+<MudPopover Open="@_isOpen" Fixed="true" AnchorOrigin="@Origin.BottomLeft" TransformOrigin="@Origin.TopLeft">
+    <MudForm>
+        <MudTextField T="string" @bind-Value="Name" Required="true"
+            HelperText="Enter your Name" Label="Name" Variant="Variant.Text" Immediate="true" />
+        <MudTextField T="string" @bind-Value="Category" Required="true"
+            HelperText="Enter th category. e.g.: Indian" Label="Category" Variant="Variant.Text" Immediate="true" />
+        <MudTextField T="string" @bind-Value="Description" Required="true"
+            HelperText="Enter Description" Label="Description" Variant="Variant.Text" Immediate="true" />
+        <MudTextField T="float" @bind-Value="Price" Required="true"
+            HelperText="Enter Price" Label="Price" Variant="Variant.Text" Immediate="true" />
+    </MudForm>
+    <div class="d-flex flex-row">
+        <MudButton OnClick="@ToggleOpen">Close</MudButton>
+        <MudButton OnClick="@AddMenuItem" Color="Color.Primary">Add Item</MudButton>
+    </div>
+</MudPopover>
 
 @code {
     [CascadingParameter]
     private string UserAuthToken { get; set; } = "";
 
+    public bool _isOpen = false;
 
+    public string Name { get; set; } = "Panner";
+    public string Category { get; set; } = "Indian";
+    public float Price { get; set; } = 10.0f;
+    public string Description { get; set; } = "random desc";
+
+    private IEnumerable<MenuItemsJSONResponse200>? menuItems = new List<MenuItemsJSONResponse200>();
+
+    private async Task AddMenuItem()
+    {
+        AddMenuItemJSONRequest menuItem = new(Name, Price, Description, Category);
+
+        (bool, string?) result = await PESUEatsWebAPI.AddMenuItemToRestaurantAsync(UserAuthToken, menuItem);
+        bool isSuccess = result.Item1;
+        string message = result.Item2 ?? "";
+
+        if (!isSuccess)
+        {
+            await DialogService.ShowMessageBox(
+                "Warning",
+                message,
+                yesText:"OK"
+            );
+            StateHasChanged();
+        }
+        else
+        {
+            await DialogService.ShowMessageBox(
+            "Added Menu Item to List",
+            message,
+            yesText: "close");
+            StateHasChanged();
+            ToggleOpen();
+            await SetItemsList();
+        }
+    }
+
+    private async Task RemoveMenuItem(int iid)
+    {
+        (bool, string?) result = await PESUEatsWebAPI.RemoveMenuItemFromRestaurantAsync(UserAuthToken, iid);
+        bool isSuccess = result.Item1;
+        string message = result.Item2 ?? "";
+
+        if (!isSuccess)
+        {
+            await DialogService.ShowMessageBox(
+                "Warning",
+                message,
+                yesText:"OK"
+            );
+            StateHasChanged();
+        }
+        else
+        {
+            await DialogService.ShowMessageBox(
+            "Item has been deleted",
+            message,
+            yesText: "close");
+            StateHasChanged();
+            await SetItemsList();
+        }
+    }
+
+    private async Task SetItemsList()
+    {
+        (bool, List<MenuItemsJSONResponse200>?, string?) result = 
+            await PESUEatsWebAPI.GetRestaurantMenuItemsAsync(UserAuthToken);
+
+        bool success = result.Item1;
+        List<MenuItemsJSONResponse200> _menuItems = result.Item2 ?? new List<MenuItemsJSONResponse200>();
+        string errorMessage = result.Item3 ?? "";
+
+        if (success)
+        {
+            menuItems = _menuItems;
+            StateHasChanged();
+        }
+        else
+        {
+            await DialogService.ShowMessageBox(
+                "Warning", 
+                errorMessage,
+                yesText:"close"
+            );
+            StateHasChanged();
+        }
+    }
+
+    protected override async void OnInitialized()
+    {
+        await SetItemsList();
+    }
+
+    public void ToggleOpen()
+    {
+        if (_isOpen)
+            _isOpen = false;
+        else
+            _isOpen = true;
+    }
 }

@@ -1,15 +1,134 @@
 ﻿@page "/app/da/currentdelivery"
 @attribute [Authorize(Roles = "da")]
 
+@using PESUEatsBlazorServer.JSONBodyFormats.app.shared
+@using PESUEatsBlazorServer.JSONBodyFormats.app.restaurant
 @inject PESUEatsBlazorServer.Services.PESUEatsWebAPIService PESUEatsWebAPI
 @inject IDialogService DialogService
 
 <PageTitle>🚚 Current Delivery</PageTitle>
 <h3>🚚 Current Delivery</h3>
 
+
+@if(enabled)
+{
+<MudCard>
+    <MudCardContent>
+        <MudText>The Order's Status: @status</MudText>
+        <MudText>Pick the order up from: @restaurant</MudText>
+        <MudText>Deliver the order to user id (to verify): @userid</MudText>
+        <MudText Typo="Typo.body2">The order was placed at @placedDateTime</MudText>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SetDeliveredStatus"
+            EndIcon="@Icons.Material.Filled.Done">Deliver</MudButton>
+    </MudCardContent>
+</MudCard>
+}
+else
+{
+    <MudText>You have no current order to Deliver</MudText>
+}
+
+<MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Reload"
+    EndIcon="@Icons.Material.Filled.Refresh">Reload</MudButton>
+
 @code {
     [CascadingParameter]
     private string UserAuthToken { get; set; } = "";
 
+    private string status { get; set; } = "";
+    private string restaurant { get; set; } = "";
+    private int userid { get; set; } = -1;
+    private string placedDateTime { get; set; } = "";
+
+    private bool enabled = false;
+
+    protected override async void OnInitialized()
+    {
+        await SetCurrentOrder();
+    }
+
+    private async void Reload()
+    {
+        await SetCurrentOrder();
+    }
+
+    private async Task SetDeliveredStatus()
+    {
+        (bool, string?) result =
+            await PESUEatsWebAPI.ChangeStatusToDelivered(UserAuthToken);
+        bool isSuccess = result.Item1;
+        string? message = result.Item2;
+
+        if (!isSuccess)
+        {
+            await DialogService.ShowMessageBox(
+                "Warning",
+                message??"",
+                yesText:"OK"
+            );
+            StateHasChanged();
+        }
+        else
+        {
+            await DialogService.ShowMessageBox(
+                "Success",
+                "Handed over to customer",
+                yesText:"OK"
+            );
+            StateHasChanged();
+            await SetCurrentOrder();
+            StateHasChanged();
+        }
+    }
+
+    private async Task SetCurrentOrder()
+    {
+
+        (bool, OrdersCurrentJSONResponse200?, string?) result =
+            await PESUEatsWebAPI.GetDACurrentOrder(UserAuthToken);
+        bool isSuccess = result.Item1;
+        string? message = result.Item3;
+
+        if (!isSuccess)
+        {
+            await DialogService.ShowMessageBox(
+                "Warning",
+                message??"",
+                yesText:"OK"
+            );
+            StateHasChanged();
+            enabled = false;
+        }
+        else
+        {
+            enabled = true;
+
+            OrdersCurrentJSONResponse200 currentOrder = result.Item2;
+            status = currentOrder.status;
+            placedDateTime = currentOrder.placedDateTime;
+            userid = currentOrder.OtoCartCustId;
+
+            (bool, List<RestaurantsJSONResponse200>?, string?) result2 = await PESUEatsWebAPI.GetRestaurantsAsync(UserAuthToken);
+
+            bool success = result2.Item1;
+            List<RestaurantsJSONResponse200> _restaurants = result2.Item2 ?? new List<RestaurantsJSONResponse200>();
+            string errorMessage = result2.Item3 ?? "";
+
+            if (success)
+            {
+                restaurant = _restaurants.Where(r => r.id == currentOrder.fromRid).FirstOrDefault().name;
+                StateHasChanged();
+            }
+            else
+            {
+                await DialogService.ShowMessageBox(
+                    "Warning", 
+                    errorMessage,
+                    yesText:"close"
+                );
+                StateHasChanged();
+            }
+        }
+    }
 
 }
